@@ -50,6 +50,8 @@
             xorriso
 
             (python311.withPackages (p: with p; [
+              docker
+              docker-compose
               jinja2
               kubernetes
               mkdocs-material
