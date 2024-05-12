@@ -22,8 +22,8 @@
       {
         devShells.default = mkShell {
           packages = [
-            ansible
-            pkgsUnstable.ansible-lint
+            #ansible
+            #pkgsUnstable.ansible-lint
             bmake
             diffutils
             docker
@@ -44,13 +44,12 @@
             neovim
             openssh
             p7zip
-            pre-commit
             shellcheck
             opentofu
             yamllint
             xorriso
 
-            (python3.withPackages (p: with p; [
+            (python311.withPackages (p: with p; [
               jinja2
               kubernetes
               mkdocs-material
@@ -59,12 +58,16 @@
               rich
               jmespath
               dnspython
+              ansible-core
+              proxmoxer
             ]))
           ];
 
           shellHook = ''
             export ANSIBLE_VAULT_PASSWORD_FILE="$(pwd)/metal/.vault-pass"
             export HISTFILE=.history
+            export LANG=C.UTF-8;
+            export PYTHONPATH="$(which python)"
           '';
         };
       }
