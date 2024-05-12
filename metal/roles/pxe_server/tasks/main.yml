@@ -1,0 +1,30 @@
+---
+- name: Get Docker info
+  community.docker.docker_host_info: {}
+  register: docker_info_result
+
+- name: Ensure Docker is running on a supported operating system
+  ansible.builtin.fail:
+    msg: Docker host networking driver only works on Linux hosts, and is not supported on Docker Desktop for Mac or Windows (you can use a Linux VM with bridged networking instead)
+  when:
+    - docker_info_result.host_info.OperatingSystem == "Docker Desktop"
+
+- name: Include task for Debian
+  tags:
+    - pxeconfig
+  ansible.builtin.include_tasks: debian.yml
+
+- name: Generate dnsmaq configuration
+  tags:
+    - pxeconfig
+  ansible.builtin.template:
+    src: dnsmasq.conf.j2
+    dest: "{{ role_path }}/files/data/pxe-config/dnsmasq.conf"
+
+- name: Start PXE Server
+  tags:
+    - pxe
+  community.docker.docker_compose_v2:
+    project_src: "{{ role_path }}/files"
+    project_name: pxe
+    state: present

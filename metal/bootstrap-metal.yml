@@ -1,0 +1,25 @@
+---
+- name: Start PXE server
+  hosts: localhost
+  gather_facts: true
+  vars:
+    pxe_server_clients: "{{ groups['proxmox'] }}"
+  pre_tasks:
+    - name: Clean up old files
+      ansible.builtin.file:
+        path: "{{ playbook_dir }}/roles/pxe_server/files/{{ item }}"
+        state: absent
+      tags:
+        - always
+      loop:
+        - data/pxe-config/dnsmasq.conf
+
+  roles:
+    - pxe_server
+
+# Wake up the nodes
+- name: Bootstrap Proxmox nodes
+  hosts: proxmox
+  gather_facts: false
+  roles:
+    - wake

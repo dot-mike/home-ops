@@ -1,0 +1,40 @@
+{{ ansible_managed | comment }}
+# Disable DNS Server
+port=0
+
+{% if dhcp_proxy == true %}
+# We're DHCP proxying on the network of the homelab host
+dhcp-range={{ ansible_default_ipv4.address }},proxy
+{% for pxe_client in pxe_server_clients %}
+{% set mac = hostvars[pxe_client].mac %}
+{% set distribution = hostvars[pxe_client].distribution_id | join('_') %}
+{% set architecture = hostvars[pxe_client].os_architecture %}
+{% set uefi_boot_file = pxe_server_distribution_filename_map[distribution][architecture]['UEFI'] %}
+{% set bios_boot_file = pxe_server_distribution_filename_map[distribution][architecture]['BIOS'] %}
+# PXE service for MAC: {{ mac }}
+dhcp-mac=set:{{ pxe_client }},{{ mac }}
+pxe-service=tag:{{ pxe_client }},x86-64_EFI,"Boot From Network, (UEFI)","{{ uefi_boot_file }}"
+pxe-service=tag:{{ pxe_client }},x86PC,"Boot From Network, (BIOS)","{{ bios_boot_file }}"
+{% endfor %}
+{% else %}
+# We're DHCP configuring on this range
+dhcp-range={{ ansible_default_ipv4.network | ansible.netcommon.ipmath(1) }},{{ ansible_default_ipv4.broadcast | ansible.netcommon.ipmath(-1) }},{{ ansible_default_ipv4.netmask }},12h
+dhcp-option=3,{{ ansible_default_ipv4.gateway }}
+
+# Match Arch Types efi x86 and x64
+dhcp-match=set:efi-x86_64,option:client-arch,7
+dhcp-match=set:efi-x86_64,option:client-arch,9
+
+# Set the Boot file based on the tag from above
+dhcp-boot=tag:efi-x86_64,syslinux.efi
+{% endif %}
+
+# Log DHCP queries to stdout
+log-queries=extra
+log-debug
+log-dhcp
+log-facility=-
+
+# Enable TFTP server
+enable-tftp
+tftp-root=/tftp

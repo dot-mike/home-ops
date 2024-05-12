@@ -1,0 +1,116 @@
+---
+- name: Prepare PXE for Debian
+  block:
+  - name: Create tftpd subdirectories
+    ansible.builtin.file:
+      path: '{{ pxe_server_tftpd_root }}/{{ item.0 }}_{{ item.1 }}/{{ item.2 }}'
+      state: directory
+      mode: '0755'
+    loop:
+    - ['Debian', '12', 'amd64']
+
+  - name: Download netboot archive
+    ansible.builtin.get_url:
+      url: "{{ lookup('vars', 'pxe_server_files_' + item.0 | lower + '_' + item.1 + '_' + item.2) }}"
+      dest: '{{ pxe_server_tftpd_root }}/{{ item.0 }}_{{ item.1 }}/{{ item.2 }}/netboot.tar.gz'
+    loop:
+      - ['Debian', '12', 'amd64']
+
+  - name: Extract netboot archive
+    ansible.builtin.unarchive:
+      src: '{{ pxe_server_tftpd_root }}/{{ item.0 }}_{{ item.1 }}/{{ item.2 }}/netboot.tar.gz'
+      dest: '{{ pxe_server_tftpd_root }}/{{ item.0 }}_{{ item.1 }}/{{ item.2 }}/'
+      remote_src: true
+      creates: '{{ pxe_server_tftpd_root }}/{{ item.0 }}_{{ item.1 }}/{{ item.2 }}/debian-installer/{{ item.2 }}/grubx64.efi'
+    loop:
+      - ['Debian', '12', 'amd64']
+
+  # this replaces 'debian-installer/amd64/grub' with 'Debian_12/amd64/debian-installer/amd64/grub' in 'grubx64.efi'
+  - name: Patch Debian 12 (Bookworm) installer path in grubx64.efi (will break UEFI Secure Boot signature)
+    ansible.builtin.shell:
+      chdir: '{{ pxe_server_tftpd_root }}/Debian_12/amd64'
+      cmd: |-
+        mv 'debian-installer/amd64/grubx64.efi' 'debian-installer/amd64/grubx64.efi.orig' && \
+        sed -e 's/\x64\x65\x62\x69\x61\x6E\x2D\x69\x6E\x73\x74\x61\x6C\x6C\x65\x72\x2F\x61\x6D\x64\x36\x34\x2F\x67\x72'\
+        '\x75\x62\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00/\x2F\x44\x65\x62\x69\x61\x6E\x5F\x31'\
+        '\x32\x2F\x61\x6D\x64\x36\x34\x2F\x64\x65\x62\x69\x61\x6E\x2D\x69\x6E\x73\x74\x61\x6C\x6C\x65\x72\x2F\x61\x6D'\
+        '\x64\x36\x34\x2F\x67\x72\x75\x62\x00/g' 'debian-installer/amd64/grubx64.efi.orig' > \
+        'debian-installer/amd64/grubx64.efi'
+      creates: '{{ pxe_server_tftpd_root }}/Debian_12/amd64/debian-installer/amd64/grubx64.efi.orig'
+
+  - name: Change uefi config
+    ansible.builtin.copy:
+      content: |
+        source $prefix/grub.cfg-$net_default_mac
+      dest: '{{ pxe_server_tftpd_root }}/{{ item.0 }}_{{ item.1 }}/{{ item.2 }}/debian-installer/{{ item.2 }}/grub/grub.cfg'
+    loop:
+      - ['Debian', '12', 'amd64']
+
+  - name: Create host-specific pxelinux config for Debian 12 (Bookworm)
+    when: hostvars[item]['distribution_id'] == ['Debian', '12'] and hostvars[item]['os_architecture'] == 'x86_64'
+    ansible.builtin.copy:
+      content: |
+        default install
+        timeout 20
+        prompt 0
+        menu hshift 4
+        menu width 70
+        menu title Debian GNU/Linux installer menu (BIOS mode)
+        label install
+              menu label Debian 12 (Bookworm) Preseed Install (BIOS, AMD64)
+              kernel /debian-installer/amd64/linux
+              append vga=788 initrd=/debian-installer/amd64/initrd.gz auto=true hostname=unassigned-hostname domain=unassigned-domain url={{ pxe_server_preseed_url }}/Debian_12/amd64/preseed.cfg-{{ hostvars[item]['mac'] | lower | replace(':', '-') }} {{ hostvars[item]['pxe_server_kernel_parameters'] if 'pxe_server_kernel_parameters' in hostvars[item] else pxe_server_kernel_parameters_debian_12_amd64 }} ---
+      dest: "{{ pxe_server_tftpd_root }}/Debian_12/amd64/debian-installer/amd64/pxelinux.cfg/01-{{ hostvars[item]['mac'] | lower | replace(':', '-') }}"
+    loop: '{{ pxe_server_clients }}'
+
+  - name: Create host-specific grub config for Debian 12 (Bookworm)
+    when: hostvars[item]['distribution_id'] == ['Debian', '12'] and hostvars[item]['os_architecture'] == 'x86_64'
+    ansible.builtin.copy:
+      content: |
+        set timeout=5
+
+        if loadfont font.pf2; then
+          set gfxmode=800x600
+          set gfxpayload=keep
+          terminal_output gfxterm
+        fi
+
+        set menu_color_normal=cyan/blue
+        set menu_color_highlight=white/blue
+
+        menuentry 'Debian 12 (Bookworm) Preseed Install (UEFI, AMD64)' {
+            set background_color=black
+            linux /Debian_12/amd64/debian-installer/amd64/linux vga=788 auto=true hostname=unassigned-hostname domain=unassigned-domain url=tftp://{{ ansible_default_ipv4.address }}/Debian_12/amd64/preseed.cfg-{{ hostvars[item]['mac'] | lower | replace(':', '-') }} {{ hostvars[item]['pxe_server_kernel_parameters'] if 'pxe_server_kernel_parameters' in hostvars[item] else pxe_server_kernel_parameters_debian_12_amd64 }} ---
+            initrd /Debian_12/amd64/debian-installer/amd64/initrd.gz
+        }
+      dest: "{{ pxe_server_tftpd_root }}/Debian_12/amd64/debian-installer/amd64/grub/grub.cfg-{{ hostvars[item]['mac'] | lower }}"
+    loop: '{{ pxe_server_clients }}'
+
+  - name: Template preseed_config to a temporary file
+    when: hostvars[item]['distribution_id'] in [['Debian', '12']]
+          and hostvars[item]['os_architecture'] == 'x86_64'
+          and 'preseed_config' in hostvars[item]
+    ansible.builtin.copy:
+      content: "{{ hostvars[item]['preseed_config'] }}"
+      dest: "/tmp/preseed_config-{{ hostvars[item]['mac'] | lower | replace(':', '-') }}.cfg"
+      mode: '0644'
+    loop: "{{ pxe_server_clients }}"
+    loop_control:
+      loop_var: item
+
+  - name: Create host-specific preseed config
+    when: hostvars[item]['distribution_id'] in [['Debian', '12']]
+          and hostvars[item]['os_architecture'] == 'x86_64'
+    ansible.builtin.template:
+      src: "{{ lookup('ansible.builtin.first_found', preseed_template_files )}}"
+      dest: "{{ pxe_server_tftpd_root }}/{{ hostvars[item]['distribution_id'] | join('_') }}/amd64/preseed.cfg-{{ hostvars[item]['mac'] | lower | replace(':', '-') }}"
+    loop: "{{ pxe_server_clients }}"
+    loop_control:
+      loop_var: item
+    vars:
+      preseed_template_files:
+        - "{{ '/tmp/preseed_config-' + hostvars[item]['mac'] | lower | replace(':', '-') + '.cfg' }}"
+        - "{{ 'preseed.cfg-' + hostvars[item]['distribution_id'] | join('-') | lower | regex_replace('[^a-z0-9-]', '-') + '-' + hostvars[item]['os_architecture'] | lower | regex_replace('[^a-z0-9-]', '-') + '.j2' }}"
+        - "{{ 'preseed.cfg-' + hostvars[item]['distribution_id'] | join('-') | lower | regex_replace('[^a-z0-9-]', '-') + '.j2' }}"
+        - "{{ 'preseed.cfg-' + hostvars[item]['os_architecture'] | lower | regex_replace('[^a-z0-9-]', '-') + '.j2' }}"
+        - "{{ 'preseed.cfg.j2' }}"

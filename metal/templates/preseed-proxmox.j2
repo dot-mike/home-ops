@@ -1,0 +1,250 @@
+#_preseed_V1
+d-i debconf/priority string critical
+
+popularity-contest popularity-contest/participate boolean false
+
+d-i hw-detect/load_firmware boolean true
+
+# Verbose output and no boot splash screen.
+d-i debian-installer/quiet  boolean false
+d-i debian-installer/splash boolean false
+d-i debian-installer/probe/usb boolean false
+
+# Set network interface used by default
+d-i netcfg/choose_interface select auto
+
+# Work around the problem that the network configuration is not applied
+# because the preseed file is loaded after it already completed.
+# So we just run the network configuration again! :D
+d-i preseed/early_command string kill-all-dhcp; netcfg
+
+# Static network configuration
+d-i netcfg/disable_autoconfig boolean true
+d-i netcfg/dhcp_failed note
+d-i netcfg/dhcp_options select Configure network manually
+
+d-i netcfg/get_ipaddress string {{ hostvars[item]['host_ip'] }}
+d-i netcfg/get_netmask string {{ netmask }}
+d-i netcfg/get_gateway string {{ gateway }}
+d-i netcfg/get_nameservers string {{ nameservers | join(' ') }}
+d-i netcfg/confirm_static boolean true
+
+# Setting the values prevents the questions from being shown, even if set by dhcp
+d-i netcfg/get_hostname string {{ hostvars[item]['inventory_hostname'] | default('unassigned-hostname') }}
+d-i netcfg/get_domain string {{ pve_domain }}
+
+# Force hostname regardless of value set by dhcp
+d-i netcfg/hostname string {{ hostvars[item]['inventory_hostname'] | default('unassigned-hostname') }}
+
+# People should live in Norway
+d-i debian-installer/country string NO
+
+# Computers should speak English
+d-i debian-installer/language string en
+d-i debian-installer/locale string en_US.UTF-8
+d-i localechooser/preferred-locale string en_US.UTF-8
+d-i localechooser/supported-locales en_US.UTF-8
+
+# But keyboards are Norwegian
+d-i console-setup/ask_detect boolean false
+d-i keyboard-configuration/layout select Norwegian
+d-i keyboard-configuration/variant select Norwegian
+d-i keyboard-configuration/modelcode string pc105
+d-i keyboard-configuration/layoutcode string no
+d-i keyboard-configuration/xkb-keymap select no
+
+d-i network-console/login select Start installer
+
+d-i debian-installer/add-kernel-opts string transparent_hugepage=never default_hugepagesz=1G hugepagesz=1G
+
+## Clock and time zone setup
+d-i clock-setup/utc boolean false
+d-i clock-setup/ntp boolean true
+d-i clock-setup/ntp-server string no.pool.ntp.org
+d-i time/zone string {{ timezone }}
+
+# Mirror
+d-i mirror/country string manual
+d-i mirror/http/hostname string ftp.uio.no
+d-i mirror/http/directory string /debian
+d-i mirror/http/proxy string
+
+# Apt setup
+d-i apt-setup/security-updates boolean true
+d-i apt-setup/restricted boolean false
+d-i apt-setup/universe boolean flase
+d-i apt-setup/multiverse boolean false
+d-i apt-setup/non-free boolean false
+d-i apt-setup/use_mirror boolean true
+d-i apt-setup/disable-cdrom-entries boolean true
+d-i apt-setup/cdrom/set-first boolean false
+d-i apt-setup/cdrom/set-next boolean false
+d-i apt-setup/cdrom/set-failed boolean false
+
+# Package selection
+tasksel tasksel/first multiselect standard, ssh-server
+d-i pkgsel/include string vim openssh-server sudo htop iotop rsync curl wget
+d-i pkgsel/upgrade select full-upgrade
+
+### Account setup
+# Skip creation of a root account (normal user account will be able to
+# use sudo).
+#d-i passwd/root-login boolean false
+# Alternatively, to skip creation of a normal user account.
+#d-i passwd/make-user boolean false
+
+d-i passwd/root-login boolean true
+d-i user-setup/allow-password-weak boolean true
+
+d-i passwd/root-password password {{ hostvars[item]['vault_pve_root_password'] }}
+d-i passwd/root-password-again password {{ hostvars[item]['vault_pve_root_password'] }}
+
+# To create a normal user account.
+d-i passwd/user-fullname string Ansible
+d-i passwd/username string ansible
+# Normal user's password, either in clear text
+d-i passwd/user-password password {{ hostvars[item]['vault_pve_ansible_user_password'] }}
+d-i passwd/user-password-again password {{ hostvars[item]['vault_pve_ansible_user_password'] }}
+# or encrypted using a crypt(3) hash.
+#d-i passwd/user-password-crypted password [crypt(3) hash]
+
+# The user account will be added to some standard initial groups. To
+# override that, use this.
+d-i passwd/user-default-groups sudo
+
+# Partitioning
+d-i user-setup/encrypt-home boolean false
+
+# Partition the device.
+# If there is more than one disk, install to the smallest disk.
+# To compile the list of disks to select the disk to install to from:
+# 1. Look at each device in /sys/block.
+# 2. Exclude it if it is a USB device.
+# 3. Exclude it if it is a virtual device.
+# 4. If it hasn't been excluded, add an item to the list in the form
+#    "/dev/nvme0n1 256 GB".
+d-i partman/early_command string \
+    disks_with_sizes=$( \
+        for device in /sys/block/*; do \
+            device_path=$(echo "${device}" | sed 's/^\/sys\/block/\/dev/'); \
+            device_info=$(udevadm info -q env "${device_path}"); \
+            if ! echo "${device_info}" | grep '^ID_BUS=usb' > /dev/null; then \
+                if ! echo "${device}" | grep '^/sys/block/dm-' > /dev/null; then \
+                    device_size=$(cat "${device}/size"); \
+                    device_size_in_gb=$((device_size * 512 / 10**9)); \
+                    echo "${device_path} ${device_size_in_gb} GB"; \
+                fi; \
+            fi; \
+        done; \
+    ); \
+    echo "${disks_with_sizes}" | while read -r disk_with_size; do \
+        echo "Disk found: ${disk_with_size}"; \
+    done; \
+    primary_disk=$( \
+        echo "${disks_with_sizes}" | \
+        sort -k 2,2 -n | \
+        head -n 1 | \
+        cut -d ' ' -f 1 \
+    ); \
+    echo "Installing to: ${primary_disk}"; \
+    debconf-set partman-auto/disk "${primary_disk}"; \
+    debconf-set grub-installer/bootdev "${primary_disk}"
+
+d-i partman-auto/choose_recipe select one
+d-i partman-auto/method string lvm
+d-i partman-auto/purge_lvm_from_device boolean true
+
+d-i partman-basicmethods/method_only boolean false
+d-i partman-basicfilesystems/no_swap boolean false
+
+d-i partman-auto-lvm/guided_size string max
+d-i partman-auto-lvm/no_boot boolean true
+d-i partman-auto-lvm/new_vg_name string data
+d-i partman-auto-lvm/new_vg_name_exists string data
+
+# This makes partman automatically partition without confirmation
+d-i partman-lvm/device_remove_lvm boolean true
+d-i partman-lvm/confirm boolean true
+d-i partman-lvm/confirm_nooverwrite boolean true
+d-i partman-md/device_remove_md boolean true
+d-i partman-md/confirm boolean true
+d-i partman-md/confirm_nooverwrite boolean true
+d-i partman-partitioning/confirm_write_new_label boolean true
+
+d-i partman-basicfilesystems/no_mount_point boolean false
+d-i partman-basicfilesystems/choose_label string gpt
+d-i partman-basicfilesystems/default_label string gpt
+d-i partman-partitioning/choose_label select gpt
+d-i partman-partitioning/default_label string gpt
+d-i partman/choose_label string gpt
+d-i partman/default_label string gpt
+
+d-i partman-auto/expert_recipe string                           \
+one ::                                                          \
+1 1 1 free                                                    \
+    $bios_boot{ }                                              \
+    method{ biosgrub }                                         \
+.                                                             \
+538 538 1075 vfat                                             \
+    $primary{ }                                                \
+    $iflabel{ gpt }                                            \
+    $reusemethod{ }                                            \
+    method{ efi } format{ }                                    \
+    mountpoint{ /boot/efi }                                    \
+.                                                             \
+512 1024 1024 ext4                                            \
+    $defaultignore{ }                                          \
+    $primary{ }                                                \
+    method{ format } format{ } use_filesystem{ }               \
+    filesystem{ ext4 } options/relatime{ relatime }            \
+    mountpoint{ /boot } label{ boot }                          \
+.                                                             \
+1024 1024 4096 linux-swap                                     \
+    $defaultignore{ }                                          \
+    $primary{ }                                                \
+    method{ swap } format{ } label{ swap }                     \
+.                                                             \
+4096 4096 -1 free                                             \
+    $defaultignore{ }                                          \
+    $primary{ }                                                \
+    method{ lvm } vg_name{ data }                              \
+.                                                             \
+20480 4096 32768 xfs                                          \
+    $defaultignore{ } $lvmok{ } in_vg{ data }                  \
+    method{ format } format{ } use_filesystem{ }               \
+    filesystem{ xfs } options/relatime{ relatime }             \
+    mountpoint{ / } lv_name{ root } label{ root }              \
+.                                                             \
+4096 4096 4096 xfs                                            \
+    $defaultignore{ } $lvmok{ } in_vg{ data }                  \
+    method{ format } format{ } use_filesystem{ }               \
+    filesystem{ xfs }                                          \
+    options/nodev{ nodev }                                     \
+    options/nosuid{ nosuid } options/noexec{ noexec }          \
+    mountpoint{ /var/lib/vz } lv_name{ vz } label{ vz }        \
+.
+
+d-i anna/choose_modules multiselect openssh-client-udeb openssh-server-udeb
+
+d-i partman/choose_partition select finish
+d-i partman/confirm boolean true
+d-i partman/confirm_nooverwrite boolean true
+
+d-i partman-efi/non_efi_system boolean true
+d-i grub2/force_efi_extra_removable boolean true
+d-i grub-installer/only_debian boolean true
+d-i grub-installer/with_other_os boolean true
+
+### Finishing up the installation
+# Avoid that last message about the install being complete.
+d-i finish-install/reboot_in_progress note
+
+### Add SSH public key for Ansible user
+d-i preseed/late_command string \
+in-target mkdir -p /home/ansible/.ssh; \
+in-target /bin/sh -c "echo '{{ ssh_public_key }}' >> /home/ansible/.ssh/authorized_keys"; \
+in-target chown -R ansible:ansible /home/ansible/.ssh/; \
+in-target chmod 644 /home/ansible/.ssh/authorized_keys; \
+in-target chmod 700 /home/ansible/.ssh/; \
+in-target /bin/sh -c "echo 'ansible ALL=(ALL:ALL) NOPASSWD: ALL' >> /etc/sudoers.d/ansible-user"; \
+in-target chmod 440 /etc/sudoers.d/ansible-user

@@ -1,0 +1,31 @@
+---
+ansible_host: "{{inventory_hostname_short}}.{{ pve_domain }}"
+
+preseed_config: "{{ lookup('template', 'preseed-proxmox.j2') }}"
+
+# geerlingguy.pip
+pip_install_packages:
+  - name: proxmoxer
+    state: present
+
+# lae.proxmox
+pve_groups:
+  - name: Admins
+    comment: Homelab administrators
+pve_users:
+  - name: admin@pve
+    email: admin@{{ pve_domain }}
+    firstname: Admininistrator
+    groups:
+      - Admins
+    password: "{{ vault_pve_admin_password }}"
+  - name: "{{ vault_pve_api_token_user }}@{{ vault_pve_api_token_user_realm }}"
+    email: "{{ vault_pve_api_token_user }}@{{ pve_domain }}"
+    firstname: "{{ vault_pve_api_token_user }}"
+    groups:
+      - Admins
+    password: "{{ vault_pve_api_token_password }}"
+pve_acls:
+  - path: /
+    roles: [ "Administrator" ]
+    groups: [ "Admins" ]

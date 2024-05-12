@@ -1,0 +1,32 @@
+---
+# defaults file for pxe_server
+
+pxe_server_preseed_url: "http://{{ ansible_default_ipv4.address }}"
+
+pxe_server_httpd_os_root: "{{ role_path }}/files/data/os"
+pxe_server_httpd_init_config_root: "{{ role_path }}/files/data/init-config"
+pxe_server_tftpd_root: "{{ role_path }}/files/data/tftpboot"
+
+pxe_server_distribution_filename_map:
+  Debian_12:
+    x86_64:
+      UEFI: 'Debian_12/amd64/debian-installer/amd64/grubx64.efi'
+      BIOS: 'Debian_12/amd64/pxelinux.0'
+  Fedora_39:
+    x86_64:
+      UEFI: 'Fedora_39/x86_64/EFI/BOOT/BOOTX64.EFI'
+      BIOS: 'Fedora_39/x86_64/pxelinux.0'
+
+pxe_server_files_debian_12_amd64:
+  'https://deb.debian.org/debian/dists/bookworm/main/installer-amd64/current/images/netboot/netboot.tar.gz'
+
+pxe_server_files_fedora_39_x86_64:
+  kernel: 'https://download.fedoraproject.org/pub/fedora/linux/releases/39/Everything/x86_64/os/images/pxeboot/initrd.img'
+  initrd: 'https://download.fedoraproject.org/pub/fedora/linux/releases/39/Everything/x86_64/os/images/pxeboot/vmlinuz'
+
+pxe_server_kernel_parameters: ''
+pxe_server_kernel_parameters_debian_12_amd64: '{{ pxe_server_kernel_parameters }}'
+pxe_server_kernel_parameters_fedora_39_x86_64: '{{ pxe_server_kernel_parameters }}'
+
+timezone: Europe/Berlin
+dhcp_proxy: true

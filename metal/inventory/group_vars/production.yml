@@ -1,0 +1,33 @@
+---
+pve_storage: local
+pve_vip_address: 192.168.10.10
+
+distribution_id:
+  - 'Debian'
+  - '12'
+
+os_architecture: x86_64
+
+# caddy configuration
+#caddy_config: "{{ lookup('template', 'Caddyfile-proxmox-production.conf.j2') }}"
+
+## keepalived configuration
+#keepalived_vrrp:
+#  - name: VI_1
+#    interface: "{{ ansible_default_ipv4.interface }}"
+#    id: 51
+#    servers: "{{ groups[pve_group] | map('extract', hostvars, ['inventory_hostname']) | list }}"
+#    auth_pass: pve-cluster-staging
+#    advert_int: 1
+#    virtual_ipaddress:
+#      - "{{ pve_vip_address }}/24 brd 192.168.10.255 scope global"
+
+# lae.proxmox
+# Proxmox VE cluster configuration
+pve_group: production
+pve_reboot_on_kernel_update: true
+pve_cluster_enabled: yes
+pve_cluster_clustername: "{{ pve_group }}" # Should be set to the name of the PVE cluster
+pve_manage_hosts_enabled : yes
+pve_ssh_port: 22
+interfaces_template: "interfaces-{{ pve_group }}.j2"
