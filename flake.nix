@@ -64,6 +64,7 @@
 
           shellHook = ''
             export ANSIBLE_VAULT_PASSWORD_FILE="$(pwd)/metal/.vault-pass"
+            export HISTFILE=.history
           '';
         };
       }
