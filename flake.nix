@@ -30,6 +30,7 @@
             docker-compose_1 # TODO upgrade to version 2
             dyff
             git
+            direnv
             go
             gotestsum
             iproute2
@@ -66,10 +67,11 @@
           ];
 
           shellHook = ''
-            export ANSIBLE_VAULT_PASSWORD_FILE="$(pwd)/metal/.vault-pass"
             export HISTFILE=.history
-            export LANG=C.UTF-8;
+            export LANG=C.UTF-8
             export PYTHONPATH="$(which python)"
+            direnv allow
+            eval "$(direnv hook bash)"
           '';
         };
       }
