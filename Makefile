@@ -1,11 +1,9 @@
 .POSIX:
-.PHONY: *
-
-#default: metal bootstrap external smoke-test post-install clean
+.PHONY: tools
+default: tools
 
 bootstrap:
 	@ssh-keygen -t ed25519 -b 4096 -f ~/.ssh/homeops-id_ed25519 -N "" -C "homeops@$(shell hostname)"
-
 
 tools:
 	@docker run \
