@@ -1,0 +1,20 @@
+---
+- name: Manage power state
+  hosts: '{{ ansible_limit | default("proxmox") }}'
+  become: true
+  gather_facts: false
+  any_errors_fatal: true
+  pre_tasks:
+    - name: Pausing for 5 seconds...
+      ansible.builtin.pause:
+        seconds: 10
+  tasks:
+    - name: Power on host
+      ansible.builtin.include_role:
+        name: wake
+      when: state == 'on'
+
+    - name: Power off host
+      community.general.shutdown:
+        when: state == 'off'
+        delay: 120
