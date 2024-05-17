@@ -22,8 +22,8 @@
       {
         devShells.default = mkShell {
           packages = [
-            #ansible
-            #pkgsUnstable.ansible-lint
+            ansible
+            pkgsUnstable.ansible-lint
             bmake
             diffutils
             docker
@@ -61,7 +61,6 @@
               rich
               jmespath
               dnspython
-              ansible-core
               proxmoxer
             ]))
           ];
