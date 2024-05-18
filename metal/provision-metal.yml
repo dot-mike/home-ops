@@ -70,7 +70,7 @@
 
     - name: Validate api token
       ansible.builtin.shell:
-        cmd: pveum user token list '{{ vault_pve_api_token_user }}@{{ vault_pve_api_token_user_realm }}' | grep -q "{{ vault_pve_api_token_id }}"
+        cmd: pveum user token list '{{ pve_api_user_username }}@{{ pve_api_user_realm }}' | grep -q "{{ pve_api_token_id }}"
       register: api_token_validation
       ignore_errors: true
       failed_when: false
@@ -84,8 +84,8 @@
           ansible.builtin.shell:
             cmd: >-
               set -o pipefail &&
-              pveum user token add '{{ vault_pve_api_token_user }}@{{ vault_pve_api_token_user_realm }}'
-              '{{ vault_pve_api_token_id }}' --privsep 0 --output-format json
+              pveum user token add '{{ pve_api_user_username }}@{{ pve_api_user_realm }}'
+              '{{ pve_api_token_id }}' --privsep 0 --output-format json
             executable: /bin/bash
           register: token_msg
           changed_when: true
