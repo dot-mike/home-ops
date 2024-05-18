@@ -1,16 +1,17 @@
 - name: Get Proxmox information
-  hosts:
-    - proxmox
+  hosts: proxmox
   gather_facts: true
   vars_files:
     - vars/{{ ansible_os_family }}.yml
+  vars:
+    pve_api_token_secret: "{{ lookup('ansible.builtin.env', 'PROXMOX_API_TOKEN_SECRET') }}"
   tasks:
     - name: List existing nodes
       community.general.proxmox_node_info:
         api_host: "{{ ansible_host }}"
-        api_user: "{{ vault_pve_api_token_user }}@{{ vault_pve_api_token_user_realm }}"
-        api_token_id: "{{ vault_pve_api_token_id }}"
-        api_token_secret: "{{ vault_pve_api_token_secret }}"
+        api_user: "{{ pve_api_user_username }}@{{ pve_api_user_realm }}"
+        api_token_id: "{{ pve_api_token_id }}"
+        api_token_secret: "{{ pve_api_token_secret }}"
       register: proxmox_nodes
 
     - name: Debug
