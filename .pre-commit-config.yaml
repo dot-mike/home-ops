@@ -15,4 +15,4 @@ repos:
   rev: v1.0.0
   hooks:
   - id: encryption-check
-    files: ".*vault.*.ya?ml$"
+    files: ((^|/)vault|vault.y[a]{0,1}ml$|.vault$|.env$)
