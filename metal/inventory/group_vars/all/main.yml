@@ -5,7 +5,7 @@ ansible_ssh_private_key_file: ~/.ssh/id_ed25519
 # Injected into the preseed file
 # which installs the key into the OS for ansible user
 ssh_public_key: "{{ lookup('file', '~/.ssh/id_ed25519.pub') }}"
-pve_domain: "pve.{{ top_level_domain }}"
+pve_domain: "pve.{{ vault_top_level_domain }}"
 
 # Networking
 metal_subnet: 192.168.10.0/24
