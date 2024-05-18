@@ -3,7 +3,7 @@
 
 provider "registry.opentofu.org/bpg/proxmox" {
   version     = "0.57.0"
-  constraints = "0.57.0"
+  constraints = "~> 0.57.0"
   hashes = [
     "h1:mPN5ffViWNH8BLHeFE69i6FgF/7pbg14Osahtrqaui0=",
     "zh:182c40ee0b4035300f4481aefe5f016dbd52bc6c63395d1a450814828d8aae07",
@@ -21,5 +21,23 @@ provider "registry.opentofu.org/bpg/proxmox" {
     "zh:e56a82436db989c3941241d1b59c909c454bcda8cedb43e1a1ea2010d935be0c",
     "zh:ef864bb7267c5e65ee923db240d61d0af9ffb89d0ff50666aece5d38cd3f43eb",
     "zh:f26e0763dbe6a6b2195c94b44696f2110f7f55433dc142839be16b9697fa5597",
+  ]
+}
+
+provider "registry.opentofu.org/hashicorp/aws" {
+  version     = "5.50.0"
+  constraints = "~> 5.50"
+  hashes = [
+    "h1:mbM4VRJTHc4llfksUxVea26u04Mgi1hbQPvmCT1Aq0U=",
+    "zh:17345c5dee93b49009c7941b1e47bb6fe94376e2d0ffc83bfd80f75c9857e2cd",
+    "zh:2ed80ee2aa5db4fe29700e5488cd67409331a5a586102511a512c34e0f31bc38",
+    "zh:30cbf46810151a2f587bbeb4172e3534186e4cfae03d4d91a90dc4d3b304acb4",
+    "zh:449b4562b8530e2d3e7555d3ed9bc0a5a9ead1067784e86572b26b98f87a073f",
+    "zh:7a853b8ae08304c8d4e8d37a607e21d1a06e0956b3aef9e52b569dc556438d90",
+    "zh:8a6923372241b0b4aa58631e5a9487b6c8eebd456d001422f0b05f707ec29744",
+    "zh:90e1b8c7a51a97d2cae255b225f9260bf75bff72c13b791453fbed8f2d2ac729",
+    "zh:a0b4f62de237913e22387630668a79754fb23c231ea8629615722287cf5e58c5",
+    "zh:c4632d2dad5ec905f625b75b80d996047967c1d2105c11daad8cbc69972fdeda",
+    "zh:ce8866ce789f27e97b890dd8a82dea101deb66daf2e651ed387584aecc51d8b4",
   ]
 }
