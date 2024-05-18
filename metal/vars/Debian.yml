@@ -5,7 +5,4 @@ ntp_config_file: /etc/ntpsec/ntp.conf
 ntp_driftfile: /var/lib/ntpsec/ntp.drift
 ntp_cron_daemon: cron
 
-bootstrap_packages: sudo gnupg python3 python3-apt jq
-bootstrap_install:
-  raw: "export LANG=C ; apt-get update && apt-get install -y {{ bootstrap_packages }}"
-  stdout_regex: ' 0 newly installed'
+bootstrap_packages: sudo gnupg python3 python3-apt jq curl

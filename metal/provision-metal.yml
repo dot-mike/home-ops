@@ -7,7 +7,7 @@
     - vars/{{ ansible_os_family }}.yml
   roles:
     - wake
-    - buluma.bootstrap
+    - bootstrap
     - geerlingguy.ntp
     - geerlingguy.pip
   tasks:

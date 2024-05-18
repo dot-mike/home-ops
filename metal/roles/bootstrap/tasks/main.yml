@@ -1,0 +1,37 @@
+- name: Prepare system
+  # At this stage, python and/or sudo are not installed, `become` can't be used.
+  become: no
+  block:
+    - name: Test connection
+      ansible.builtin.wait_for_connection:
+        timeout: "{{ bootstrap_timeout }}"
+      register: bootstrap_connect
+      changed_when: no
+    - name: Test sudo
+      ansible.builtin.command:
+        cmd: sudo --version
+      changed_when: no
+  rescue:
+    - name: Gather bootstrap facts
+      ansible.builtin.include_tasks:
+        file: gather_facts.yml
+
+    - name: Install bootstrap packages (raw)
+      ansible.builtin.raw: "{{ bootstrap_install.raw }}"
+      args:
+        executable: /bin/sh
+      register: bootstrap_install_packages
+      changed_when:
+        - (bootstrap_install.stdout_regex in bootstrap_install_packages.stdout and
+           bootstrap_os_family in [ "Alpine", "Archlinux", "Gentoo" ]) or
+          (bootstrap_install.stdout_regex not in bootstrap_install_packages.stdout and
+           bootstrap_os_family in [ "Debian", "RedHat", "Rocky", "Suse" ])
+
+- name: Gather ansible facts
+  ansible.builtin.setup:
+  become: no
+
+- name: Include packages tasks
+  ansible.builtin.import_tasks:
+    file: packages.yml
+  tags: packages

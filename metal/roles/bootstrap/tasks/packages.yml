@@ -1,0 +1,7 @@
+---
+- name: Install bootstrap packages (package)
+  ansible.builtin.package:
+    name: "{{ item }}"
+    state: present
+  loop: "{{ bootstrap_facts_packages.split() }}"
+  become: "{{ bootstrap_become }}"
