@@ -2,7 +2,7 @@
   hosts: proxmox
   gather_facts: true
   become: true
-  tags: bootstrap
+  tags: prepare
   vars_files:
     - vars/{{ ansible_os_family }}.yml
   roles:
@@ -45,23 +45,29 @@
             force: true
           when: ntp_config_file != '/etc/ntp.conf'
 
-- name: Provision Proxmox on nodes
-  hosts:
-    - proxmox
+- name: Install Proxmox on nodes
+  hosts: proxmox
   gather_facts: true
   become: true
-  tags:
-    - provision
+  tags: install
   vars_files:
     - vars/{{ ansible_os_family }}.yml
+
   roles:
-    - name: lae.proxmox
-      tags: pve
     #- name: caddy
     #  tags: caddy
     #- name: keepalived
     #  tags: keepalived
   tasks:
+    - name: Include lae.proxmox role for Proxmox cluster setup
+      ansible.builtin.import_role:
+        name: lae.proxmox
+      vars:
+        pve_check_for_kernel_update: true
+        pve_reboot_on_kernel_update: false
+        pve_run_system_upgrades: true
+        pve_run_proxmox_upgrades: true
+
     - name: Validate api token
       ansible.builtin.shell:
         cmd: pveum user token list '{{ vault_pve_api_token_user }}@{{ vault_pve_api_token_user_realm }}' | grep -q "{{ vault_pve_api_token_id }}"
