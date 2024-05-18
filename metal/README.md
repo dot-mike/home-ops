@@ -31,3 +31,11 @@ ansible-playbook -i inventory/hosts provision-metal.yml -l pve-node-01
 ## Ansible Vaults
 
 The Ansible Vault password is stored in the `.vault-pass` file which is not checked into the repository.
+
+## Ansible requirements
+
+Install the required Ansible roles and collections:
+
+```bash
+ansible-galaxy install -r requirements.yml
+```
