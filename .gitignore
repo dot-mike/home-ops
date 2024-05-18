@@ -1,3 +1,11 @@
+# General
 .vault-pass
 .venv
 .history
+
+# Terraform
+**/.terraform/*
+
+# .tfstate files
+*.tfstate
+*.tfstate.*
