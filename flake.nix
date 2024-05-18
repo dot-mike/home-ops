@@ -50,7 +50,7 @@
             yamllint
             xorriso
 
-            (python311.withPackages (p: with p; [
+            (python3.withPackages (p: with p; [
               docker
               docker-compose
               jinja2
@@ -59,16 +59,16 @@
               netaddr
               pexpect
               rich
-              jmespath
               dnspython
               proxmoxer
+              jmespath
+              pip
             ]))
           ];
 
           shellHook = ''
             export HISTFILE=.history
             export LANG=C.UTF-8
-            export PYTHONPATH="$(which python)"
             direnv allow
             eval "$(direnv hook bash)"
           '';
