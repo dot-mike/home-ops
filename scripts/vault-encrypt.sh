@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
 SCRIPT_DIR=$(realpath $(dirname $0))
 
@@ -7,6 +7,13 @@ FILES=(
     "${SCRIPT_DIR}/../metal/inventory/group_vars/all/vault.yml"
     "${SCRIPT_DIR}/../.env"
 )
+
+EXTRA_ARGS=""
+VAULT_COMMAND="ansible-vault"
+
+if [[ -z "${ANSIBLE_VAULT_PASSWORD_FILE:-}" ]]; then
+    EXTRA_ARGS="--vault-password-file ${SCRIPT_DIR}/../.vault-pass"
+fi
 
 for FILE in "${FILES[@]}"; do
     if [ ! -f "$FILE" ]; then
@@ -17,7 +24,7 @@ for FILE in "${FILES[@]}"; do
     OWNER=$(stat -c %u "$FILE")
     PERMS=$(stat -c %a "$FILE")
 
-    ansible-vault encrypt "$FILE"
+    $VAULT_COMMAND encrypt $EXTRA_ARGS "$FILE"
 
     chown $OWNER "$FILE"
     chmod $PERMS "$FILE"
