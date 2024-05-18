@@ -96,3 +96,22 @@
             msg: '{{ token_data | json_query(''"full-tokenid"'') }}={{ token_data | json_query("value") }}'
           vars:
             - token_data: "{{ token_msg.stdout | from_json }}"
+
+- name: Post-install configure Proxmox nodes
+  hosts: proxmox
+  gather_facts: true
+  become: true
+  tags: configure
+  vars_files:
+    - vars/{{ ansible_os_family }}.yml
+
+  tasks:
+    - name: Update user passwords
+      ansible.builtin.user:
+        name: "{{ item.name | split('@') | first }}"
+        password: "{{ item.password | password_hash('sha512') }}"
+        update_password: always
+      loop: "{{ pve_users }}"
+      loop_control:
+        label: "{{ item.name }}"
+      when: "item.name | split('@') | last == 'pve'"
