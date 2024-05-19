@@ -16,5 +16,5 @@
 
     - name: Power off host
       community.general.shutdown:
-        delay: 120
+        delay: 30
       when: state == 'off'

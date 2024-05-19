@@ -16,3 +16,4 @@ repos:
   hooks:
   - id: encryption-check
     files: ((^|/)vault|vault.y[a]{0,1}ml$|.vault$|.env$)
+    exclude: ((^|/)scripts/vault-.*\.sh$)

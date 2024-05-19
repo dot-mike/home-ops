@@ -1,0 +1,16 @@
+---
+fedora_coreos_version: 39.20240309.3.0
+
+proxmox_vm_templates:
+  - template_name: "fedora.coreos.v{{ fedora_coreos_version }}"
+    vmid: 9000
+    memory: 2048
+    interfaces:
+      - interface: eth0
+        bridge: vmbr0
+    disk: scsi0
+    disk_image_url: >
+      https://builds.coreos.fedoraproject.org/prod/streams/stable/builds/
+      {{ fedora_coreos_version }}/x86_64/fedora-coreos-{{ fedora_coreos_version }}-qemu.x86_64.qcow2.xz
+    disk_image: /var/lib/vz/template/iso/fedora-coreos-{{ fedora_coreos_version }}-qemu.x86_64.qcow2
+    storage: "{{ pve_storage }}"

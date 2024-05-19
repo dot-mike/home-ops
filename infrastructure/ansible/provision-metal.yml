@@ -19,9 +19,9 @@
             name: "{{ inventory_hostname }}.{{ pve_domain }}"
 
         - name: Set hostname to /etc/hostname
-          ansible.builtin.lineinfile:
-            path: /etc/hostname
-            line: "{{ inventory_hostname }}"
+          ansible.builtin.copy:
+            dest: /etc/hostname
+            content: "{{ inventory_hostname }}"
 
         - name: Update /etc/hosts
           ansible.builtin.replace:
@@ -37,13 +37,13 @@
             replace: "search {{ pve_domain }}"
             backup: true
 
-        - name: Symlink /etc/ntp.conf to ntp_config_file
-          ansible.builtin.file:
-            src: "{{ ntp_config_file }}"
-            dest: /etc/ntp.conf
-            state: link
-            force: true
-          when: ntp_config_file != '/etc/ntp.conf'
+    - name: Symlink /etc/ntp.conf to ntp_config_file
+      ansible.builtin.file:
+        src: "{{ ntp_config_file }}"
+        dest: /etc/ntp.conf
+        state: link
+        force: true
+      when: ntp_config_file != '/etc/ntp.conf'
 
 - name: Install Proxmox on nodes
   hosts: proxmox

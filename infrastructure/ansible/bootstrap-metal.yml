@@ -2,6 +2,9 @@
 - name: Start PXE server
   hosts: localhost
   gather_facts: true
+  tags:
+    - bootstrap
+    - pxe
   vars:
     pxe_server_clients: "{{ groups['proxmox'] }}"
   pre_tasks:
@@ -21,5 +24,8 @@
 - name: Bootstrap Proxmox nodes
   hosts: proxmox
   gather_facts: false
+  tags:
+    - bootstrap
+    - wol
   roles:
     - wake

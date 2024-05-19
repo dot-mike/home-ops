@@ -3,8 +3,8 @@
 SCRIPT_DIR=$(realpath $(dirname $0))
 
 FILES=(
-    "${SCRIPT_DIR}/../metal/inventory/group_vars/proxmox/vault.yml"
-    "${SCRIPT_DIR}/../metal/inventory/group_vars/all/vault.yml"
+    "${SCRIPT_DIR}/../infrastructure/ansible/inventory/group_vars/proxmox/vault.yml"
+    "${SCRIPT_DIR}/../infrastructure/ansible/inventory/group_vars/all/vault.yml"
     "${SCRIPT_DIR}/../.env"
 )
 

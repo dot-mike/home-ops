@@ -1,12 +1,11 @@
 ---
-pve_storage: local
-pve_vip_address: 192.168.10.10
-
+# pxe_server configuration
 distribution_id:
   - 'Debian'
   - '12'
-
 os_architecture: x86_64
+
+#pve_vip_address: 192.168.10.10
 
 # caddy configuration
 #caddy_config: "{{ lookup('template', 'Caddyfile-proxmox-production.conf.j2') }}"
@@ -25,9 +24,9 @@ os_architecture: x86_64
 # lae.proxmox
 # Proxmox VE cluster configuration
 pve_group: production
-pve_reboot_on_kernel_update: true
 pve_cluster_enabled: yes
 pve_cluster_clustername: "{{ pve_group }}" # Should be set to the name of the PVE cluster
 pve_manage_hosts_enabled : yes
+pve_watchdog: none
 pve_ssh_port: 22
 interfaces_template: "interfaces-{{ pve_group }}.j2"
