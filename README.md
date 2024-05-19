@@ -45,10 +45,10 @@ The Proxmox hypervisors
 
 | Proxmox Node | IP Address    | OS        |
 | ------------ | ------------- | --------- |
-| pve-node-01  | 192.168.10.15 | Debian 19 |
-| pve-node-02  | 192.168.10.16 | Debian 19 |
-| pve-node-03  | 192.168.10.17 | Debian 19 |
-| pve-node-04  | 192.168.10.18 | Debian 19 |
+| pve-node-01  | 192.168.10.15 | Debian 12 |
+| pve-node-02  | 192.168.10.16 | Debian 12 |
+| pve-node-03  | 192.168.10.17 | Debian 12 |
+| pve-node-04  | 192.168.10.18 | Debian 12 |
 
 ### OKD Platform
 
