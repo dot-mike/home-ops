@@ -6,4 +6,4 @@ if [ $# -ne 1 ]; then
 fi
 
 SCRIPT_DIR=$(realpath $(dirname $0))
-ansible-playbook "$SCRIPT_DIR/../metal/host-power.yml" --extra-vars "state=$1"
+ansible-playbook "$SCRIPT_DIR/../infrastructure/ansible/host-power.yml" --extra-vars "state=$1"
