@@ -1,0 +1,12 @@
+{
+  "files.associations": {
+    "**/ansible/**/*.yml": "ansible",
+    "**/ansible/**/inventory/**/*.yml": "yaml",
+    "**/tofu/**/*.tf": "terraform",
+  },
+  "editor.bracketPairColorization.enabled": true,
+  "editor.guides.bracketPairs": true,
+  "editor.guides.bracketPairsHorizontal": true,
+  "editor.guides.highlightActiveBracketPair": true,
+  "files.trimTrailingWhitespace": true,
+}
