@@ -1,0 +1,8 @@
+---
+host_ip: 192.168.10.18
+mac: 8c:16:45:ec:81:5f
+
+# Inspired by Debian's OpenStack images
+# Ref.: https://cdimage.debian.org/cdimage/openstack/
+#pxe_server_kernel_parameters: >-
+#  console=tty0 console=ttyS0,115200 earlyprintk=ttyS0,115200 consoleblank=0 systemd.show_status=true
