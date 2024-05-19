@@ -1,29 +1,34 @@
 ---
+# Bootstrap metal
+
+# Create the PXE server
 - name: Start PXE server
   hosts: localhost
   gather_facts: true
+  become: false
+  any_errors_fatal: true
   tags:
     - bootstrap
     - pxe
   vars:
-    pxe_server_clients: "{{ groups['proxmox'] }}"
+    pxe_server_clients: "{{ lookup('inventory_hostnames', ansible_limit, wantlist=True) | difference(['localhost']) }}"
   pre_tasks:
     - name: Clean up old files
       ansible.builtin.file:
         path: "{{ playbook_dir }}/roles/pxe_server/files/{{ item }}"
         state: absent
-      tags:
-        - always
+      tags: always
       loop:
         - data/pxe-config/dnsmasq.conf
-
   roles:
     - pxe_server
 
 # Wake up the nodes
 - name: Bootstrap Proxmox nodes
-  hosts: proxmox
+  hosts: "proxmox:!localhost"
   gather_facts: false
+  become: true
+  any_errors_fatal: true
   tags:
     - bootstrap
     - wol

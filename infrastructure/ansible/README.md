@@ -12,7 +12,7 @@ This playbook starts a PXE Server on localhost with Docker and sends wake-up pac
 Example usage to bootstrap one node:
 
 ```bash
-ansible-playbook -i inventory/hosts bootstrap-metal.yml -l localhost,pve-node-01
+ansible-playbook -i inventory/hosts.yml bootstrap-metal.yml -l localhost,pve-node-04
 ```
 
 ### `provision-metal.yml`
@@ -25,7 +25,7 @@ This playbook does two things:
 Example usage to provision one node:
 
 ```bash
-ansible-playbook -i inventory/hosts provision-metal.yml -l pve-node-01
+ansible-playbook -i inventory/hosts.yml provision-metal.yml -l pve-node-01
 ```
 
 ## Ansible Vaults

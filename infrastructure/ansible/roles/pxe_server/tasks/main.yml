@@ -23,7 +23,7 @@
 
 - name: Start PXE Server
   tags:
-    - pxe
+    - pxeserver
   community.docker.docker_compose_v2:
     project_src: "{{ role_path }}/files"
     project_name: pxe
