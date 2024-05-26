@@ -1,0 +1,31 @@
+---
+- name: Validate api token
+  ansible.builtin.shell:
+    cmd: pveum user token list '{{ item.0.name }}' | grep -q '{{ item.1.name }}'
+  register: api_token_validation
+  ignore_errors: true
+  failed_when: false
+  changed_when: false
+
+- name: print user and token
+  ansible.builtin.debug:
+    msg: "{{ item.0.name }} - {{ item.1.name }} - {{ api_token_validation }}"
+
+- name: Generate proxmox API token
+  when: api_token_validation.rc == 1
+  block:
+    - name: Add api token
+      ansible.builtin.shell:
+        cmd: >-
+          set -o pipefail &&
+          pveum user token add '{{ item.0.name }}' '{{ item.1.name }}' --privsep 0 --output-format json
+        executable: /bin/bash
+      register: token_msg
+      changed_when: true
+      become: true
+
+    - name: Print Ansible API token
+      ansible.builtin.debug:
+        msg: '{{ token_data | json_query(''"full-tokenid"'') }}={{ token_data | json_query("value") }}'
+      vars:
+        - token_data: "{{ token_msg.stdout | from_json }}"

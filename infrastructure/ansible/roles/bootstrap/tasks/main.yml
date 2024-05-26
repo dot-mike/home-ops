@@ -23,9 +23,9 @@
       register: bootstrap_install_packages
       changed_when:
         - (bootstrap_install.stdout_regex in bootstrap_install_packages.stdout and
-           bootstrap_os_family in [ "Alpine", "Archlinux", "Gentoo" ]) or
+          bootstrap_os_family in [ "Alpine", "Archlinux", "Gentoo" ]) or
           (bootstrap_install.stdout_regex not in bootstrap_install_packages.stdout and
-           bootstrap_os_family in [ "Debian", "RedHat", "Rocky", "Suse" ])
+          bootstrap_os_family in [ "Debian", "RedHat", "Rocky", "Suse" ])
 
 - name: Gather ansible facts
   ansible.builtin.setup:
@@ -35,3 +35,8 @@
   ansible.builtin.import_tasks:
     file: packages.yml
   tags: packages
+
+- name: Include users tasks
+  ansible.builtin.import_tasks:
+    file: users.yml
+  tags: users

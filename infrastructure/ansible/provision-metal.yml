@@ -49,53 +49,19 @@
   hosts: proxmox
   gather_facts: true
   become: true
-  tags: install
+  tags:
+    - install
   vars_files:
     - vars/{{ ansible_os_family }}.yml
-
-  roles:
-    #- name: caddy
-    #  tags: caddy
-    #- name: keepalived
-    #  tags: keepalived
   tasks:
     - name: Include lae.proxmox role for Proxmox cluster setup
       ansible.builtin.import_role:
         name: lae.proxmox
       vars:
-        pve_check_for_kernel_update: true
+        pve_check_for_kernel_update: false
         pve_reboot_on_kernel_update: false
-        pve_run_system_upgrades: true
-        pve_run_proxmox_upgrades: true
-
-    - name: Validate api token
-      ansible.builtin.shell:
-        cmd: pveum user token list '{{ pve_api_user_username }}@{{ pve_api_user_realm }}' | grep -q "{{ pve_api_token_id }}"
-      register: api_token_validation
-      ignore_errors: true
-      failed_when: false
-      changed_when: false
-
-    - name: Generate proxmox API token
-      when: api_token_validation.rc == 1
-      run_once: true
-      block:
-        - name: Add api token for Ansible-user to Proxmox
-          ansible.builtin.shell:
-            cmd: >-
-              set -o pipefail &&
-              pveum user token add '{{ pve_api_user_username }}@{{ pve_api_user_realm }}'
-              '{{ pve_api_token_id }}' --privsep 0 --output-format json
-            executable: /bin/bash
-          register: token_msg
-          changed_when: true
-          become: true
-
-        - name: Print Ansible API token
-          ansible.builtin.debug:
-            msg: '{{ token_data | json_query(''"full-tokenid"'') }}={{ token_data | json_query("value") }}'
-          vars:
-            - token_data: "{{ token_msg.stdout | from_json }}"
+        pve_run_system_upgrades: false
+        pve_run_proxmox_upgrades: false
 
 - name: Post-install configure Proxmox nodes
   hosts: proxmox
@@ -104,14 +70,12 @@
   tags: configure
   vars_files:
     - vars/{{ ansible_os_family }}.yml
-
   tasks:
-    - name: Update user passwords
-      ansible.builtin.user:
-        name: "{{ item.name | split('@') | first }}"
-        password: "{{ item.password | password_hash('sha512') }}"
-        update_password: always
-      loop: "{{ pve_users }}"
-      loop_control:
-        label: "{{ item.name }}"
-      when: "item.name | split('@') | last == 'pve'"
+    - name: API Token Generation
+      tags: always
+      ansible.builtin.include_tasks:
+        file: tasks/pve-token.yml
+        apply:
+          tags: ["configure"]
+      loop: "{{ pve_users | subelements('api_tokens', skip_missing=true) }}"
+      when: inventory_hostname == groups[pve_group][0]

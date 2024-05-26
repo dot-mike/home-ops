@@ -1,0 +1,28 @@
+---
+- name: Create posix groups for users
+  ansible.builtin.group:
+    name: "{{ item.name }}"
+    state: present
+  loop: "{{ bootstrap_users }}"
+  # no_log: yes
+
+- name: Add users
+  ansible.builtin.user:
+    name: "{{ item.name }}"
+    comment: "{{ item.comment | default(omit) }}"
+    uid: "{{ item.uid | default(omit) }}"
+    password: "{{ item.password | password_hash('sha512') }}"
+    home: "/home/{{ item.name }}"
+    group: "{{ item.name }}"
+    groups: "{{ item.groups | default(omit) }}"
+    shell: "{{ item.shell | default('/bin/false') }}"
+    state: "{{ item.state | default('present') }}"
+  loop: "{{ bootstrap_users }}"
+  # no_log: yes
+
+- name: set authorized keys for users
+  ansible.posix.authorized_key:
+    user: "{{ item.name }}"
+    key: "{{ item.pubkey }}"
+    state: "{{ item.state | default('present') }}"
+  loop: "{{ bootstrap_users_ssh_keys }}"

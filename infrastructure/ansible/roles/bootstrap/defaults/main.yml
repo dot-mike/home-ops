@@ -1,5 +1,4 @@
 ---
-
 # Do you want to wait for the host to be available?
 bootstrap_wait_for_host: no
 
@@ -8,3 +7,9 @@ bootstrap_timeout: 3
 
 # Set role to use "become" or not.
 bootstrap_become: yes
+
+# users to be created
+bootstrap_users: []
+
+# ssh keys to be added to users
+bootstrap_users_ssh_keys: []

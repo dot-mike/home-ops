@@ -11,9 +11,8 @@ repos:
   hooks:
   - id: trailing-whitespace
   - id: end-of-file-fixer
-- repo: https://github.com/IamTheFij/ansible-pre-commit
-  rev: v1.0.0
+- repo: https://github.com/yuvipanda/pre-commit-hook-ensure-sops
+  rev: v1.0
   hooks:
-  - id: encryption-check
-    files: ((^|/)vault|vault.y[a]{0,1}ml$|.vault$|.env$)
-    exclude: ((^|/)scripts/vault-.*\.sh$)
+    - id: sops-encryption
+      files: ((^|/)sops.y[a]{0,1}ml$)

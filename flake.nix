@@ -24,6 +24,7 @@
           packages = [
             ansible
             pkgsUnstable.ansible-lint
+            pkgsUnstable.bws
             bmake
             diffutils
             docker
@@ -31,6 +32,7 @@
             dyff
             git
             direnv
+            envsubst
             go
             gotestsum
             iproute2
@@ -45,9 +47,12 @@
             neovim
             openssh
             p7zip
+            rage
             shellcheck
+            sops
             opentofu
             yamllint
+            yq
             xorriso
 
             (python3.withPackages (p: with p; [
@@ -67,10 +72,10 @@
           ];
 
           shellHook = ''
-            export HISTFILE=.history
+            export HISTFILE=($PWD)/.history
             export LANG=C.UTF-8
-            direnv allow
             eval "$(direnv hook bash)"
+            find . -name .envrc -exec direnv allow {} \;
           '';
         };
       }

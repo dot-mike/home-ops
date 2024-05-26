@@ -1,9 +1,11 @@
 ---
 - name: Manage power state
-  hosts: '{{ ansible_limit | default("proxmox") }}'
+  hosts: proxmox
   become: true
   gather_facts: false
   any_errors_fatal: true
+  vars:
+    ansible_host_key_checking: false
   pre_tasks:
     - name: Pausing for 5 seconds...
       ansible.builtin.pause:

@@ -1,0 +1,17 @@
+---
+keys:
+  - &admins:
+    - &mike age1ljzmwqzhtup64g359hk070vem7qcy3p286pcazeczw67sjm5rcys75ltw6
+creation_rules:
+  - path_regex: secrets.sops.y?ml
+    key_groups:
+      - age:
+          - *mike
+  - path_regex: ansible/.*\.sops\.y?ml
+    key_groups:
+      - age:
+          - *mike
+  - path_regex: tofu/.*\.sops\.y?ml
+    key_groups:
+      - age:
+          - *mike

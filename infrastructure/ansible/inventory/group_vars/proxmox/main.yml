@@ -4,8 +4,6 @@ ansible_host: "{{inventory_hostname_short}}.{{ pve_domain }}"
 # proxmox api stuff
 pve_api_user_username: automation
 pve_api_user_realm: pve
-pve_api_token_id: "{{ lookup('ansible.builtin.env', 'PROXMOX_API_TOKEN_ID', default=Undefined) }}"
-
 preseed_config: "{{ lookup('template', 'preseed-proxmox.j2') }}"
 
 # geerlingguy.pip
@@ -17,21 +15,7 @@ pip_install_packages:
 pve_groups:
   - name: Admins
     comment: Homelab administrators
-
-pve_users:
-  - name: admin@pve
-    email: admin@{{ pve_domain }}
-    firstname: Admininistrator
-    groups:
-      - Admins
-    password: "{{ vault_pve_admin_password }}"
-
-  - name: "{{ pve_api_user_username }}@{{ pve_api_user_realm }}"
-    email: "{{ pve_api_user_username }}@{{ pve_domain }}"
-    firstname: "{{ pve_api_user_username }}"
-    groups:
-      - Admins
-    password: "{{ vault_pve_api_user_password }}"
+pve_users: "{{ proxmox_users }}"
 
 pve_acls:
   - path: /
